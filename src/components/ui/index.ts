@@ -4,6 +4,8 @@ export { Button } from './Button/Button';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './Button/Button';
 export { Card } from './Card/Card';
 export type { CardProps } from './Card/Card';
+export { Drawer } from './Drawer/Drawer';
+export type { DrawerProps } from './Drawer/Drawer';
 export { EmptyState } from './EmptyState/EmptyState';
 export type { EmptyStateProps } from './EmptyState/EmptyState';
 export { ErrorState } from './ErrorState/ErrorState';

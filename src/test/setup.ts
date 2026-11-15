@@ -6,6 +6,19 @@ import { server } from './msw/server';
 // jsdom no implementa scrollTo (lo usa <ScrollRestoration /> de React Router).
 window.scrollTo = () => undefined;
 
+// jsdom no implementa showModal/close de <dialog> (lo usa Drawer). Stub mínimo: solo `open`.
+if (typeof HTMLDialogElement.prototype.showModal !== 'function') {
+  Object.assign(HTMLDialogElement.prototype, {
+    showModal(this: HTMLDialogElement) {
+      this.setAttribute('open', '');
+    },
+    close(this: HTMLDialogElement) {
+      this.removeAttribute('open');
+      this.dispatchEvent(new Event('close'));
+    },
+  });
+}
+
 // jsdom no implementa Pointer Capture (lo usa Sonner para el swipe de los toasts).
 if (!('setPointerCapture' in Element.prototype)) {
   Object.assign(Element.prototype, {
