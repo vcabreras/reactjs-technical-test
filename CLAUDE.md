@@ -120,7 +120,14 @@ Lista cerrada (ver regla 2).
 | HTTP | `fetch` nativo con cliente propio (sin Axios ni ky) |
 | Toasts | `sonner` (envuelto en `ui/toast`) |
 | Tests | `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom`, `msw` |
-| Calidad | `eslint` (+ `typescript-eslint`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`), `prettier` |
+| Calidad | `eslint` (+ `@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `eslint-config-prettier`, `globals`), `prettier` |
+| Tooling | `typescript`, `@vitejs/plugin-react`, `@types/react`, `@types/react-dom`, `@types/node`, `@testing-library/dom` |
+
+Versiones mayores instaladas (revisar su API antes de usarla, no asumir versiones antiguas):
+React 19.3, React Router **8**, TanStack Query 5, TanStack Table **9**, Zod **4**, RHF 7,
+`@hookform/resolvers` 7, Sonner 2, Bootstrap 5.3, Vite **8**, Vitest **5**, MSW **3**, ESLint **10**.
+**TypeScript fijado a `~6.0`**: `typescript-eslint` 8 no soporta TS 7 (peer `<6.1.0`). No actualizar
+hasta que lo soporte.
 
 ## Estructura
 
@@ -263,7 +270,8 @@ Consultar por rol/label, no por clases ni test-ids. Mínimo:
 pnpm dev         # servidor de desarrollo
 pnpm test        # Vitest
 pnpm lint        # ESLint
-pnpm typecheck   # tsc --noEmit
+pnpm typecheck   # tsc -b (noEmit)
+pnpm format      # Prettier --write (format:check para CI)
 ```
 
 ## README / uso de IA
