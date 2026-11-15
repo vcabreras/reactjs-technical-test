@@ -5,7 +5,6 @@ import { Pagination, type PaginationProps } from './Pagination';
 
 function renderPagination(props: Partial<PaginationProps> = {}) {
   const onPageChange = vi.fn();
-  const onPageSizeChange = vi.fn();
   render(
     <Pagination
       page={1}
@@ -13,11 +12,10 @@ function renderPagination(props: Partial<PaginationProps> = {}) {
       total={18}
       pageSize={5}
       onPageChange={onPageChange}
-      onPageSizeChange={onPageSizeChange}
       {...props}
     />,
   );
-  return { onPageChange, onPageSizeChange };
+  return { onPageChange };
 }
 
 describe('Pagination', () => {
@@ -69,20 +67,11 @@ describe('Pagination', () => {
     expect(screen.getByText('Página 4 de 4')).toBeInTheDocument();
   });
 
-  it('notifica el cambio de tamaño de página como número', async () => {
-    const { onPageSizeChange } = renderPagination();
-
-    await userEvent.selectOptions(screen.getByLabelText('Por página'), '10');
-
-    expect(onPageSizeChange).toHaveBeenCalledWith(10);
-  });
-
-  it('con una sola página oculta la navegación pero mantiene resumen y selector', () => {
+  it('con una sola página oculta la navegación pero mantiene el resumen', () => {
     renderPagination({ pageCount: 1, total: 3 });
 
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     expect(screen.getByText('Mostrando 1–3 de 3')).toBeInTheDocument();
-    expect(screen.getByLabelText('Por página')).toBeInTheDocument();
   });
 
   it('sin resultados no renderiza nada', () => {

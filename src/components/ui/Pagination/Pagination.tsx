@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { type ReactNode, useId } from 'react';
+import type { ReactNode } from 'react';
 import { cx } from '@/lib/cx';
 import { getPageItems } from './getPageItems';
 
@@ -11,9 +11,6 @@ export interface PaginationProps {
   /** Total de elementos: muestra "Mostrando X–Y de Z". */
   total?: number;
   pageSize?: number;
-  /** Con `onPageSizeChange`, muestra el selector de tamaño de página. */
-  pageSizeOptions?: readonly number[];
-  onPageSizeChange?: (pageSize: number) => void;
   siblingCount?: number;
   /** Nombre accesible del `<nav>`. */
   label?: string;
@@ -46,21 +43,17 @@ function PageButton({ label, disabled, current, onClick, className, children }: 
   );
 }
 
-/** Paginación controlada (server side). En móvil: solo anterior/siguiente + "Página X de Y". */
+/** Paginación controlada. En móvil: solo anterior/siguiente + "Página X de Y". */
 export function Pagination({
   page,
   pageCount,
   onPageChange,
   total,
   pageSize,
-  pageSizeOptions = [5, 10],
-  onPageSizeChange,
   siblingCount = 1,
   label = 'Paginación',
   className,
 }: PaginationProps) {
-  const pageSizeId = useId();
-
   if (total === 0 || pageCount < 1) {
     return null;
   }
@@ -86,26 +79,6 @@ export function Pagination({
       )}
 
       <div className="d-flex flex-wrap align-items-center gap-3 ms-auto">
-        {onPageSizeChange && pageSize !== undefined && (
-          <div className="d-flex align-items-center gap-2">
-            <label htmlFor={pageSizeId} className="small text-body-secondary text-nowrap">
-              Por página
-            </label>
-            <select
-              id={pageSizeId}
-              className="form-select form-select-sm w-auto"
-              value={pageSize}
-              onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            >
-              {pageSizeOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         {pageCount > 1 && (
           <nav aria-label={label}>
             <ul className="pagination pagination-sm mb-0">
