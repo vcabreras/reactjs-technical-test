@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { API_URL } from '@/test/msw/handlers';
 import { server } from '@/test/msw/server';
-import { request, requestPaginated } from './client';
+import { request } from './client';
 import { ApiError } from './errors';
 
 const ItemSchema = z.object({ id: z.number(), name: z.string() });
@@ -120,36 +120,5 @@ describe('request', () => {
     const error = await catchApiError(promise);
 
     expect(error.kind).toBe('aborted');
-  });
-});
-
-describe('requestPaginated', () => {
-  it('devuelve los datos y el total de X-Total-Count', async () => {
-    server.use(
-      http.get(url, () =>
-        HttpResponse.json([{ id: 1, name: 'A' }], { headers: { 'X-Total-Count': '42' } }),
-      ),
-    );
-
-    await expect(requestPaginated('/items', { itemSchema: ItemSchema })).resolves.toEqual({
-      data: [{ id: 1, name: 'A' }],
-      total: 42,
-    });
-  });
-
-  it.each([
-    ['ausente', undefined],
-    ['no numérica', 'abc'],
-    ['negativa', '-1'],
-  ])('lanza ApiError parse si X-Total-Count está %s', async (_, header) => {
-    server.use(
-      http.get(url, () =>
-        HttpResponse.json([], { headers: header === undefined ? {} : { 'X-Total-Count': header } }),
-      ),
-    );
-
-    const error = await catchApiError(requestPaginated('/items', { itemSchema: ItemSchema }));
-
-    expect(error.kind).toBe('parse');
   });
 });

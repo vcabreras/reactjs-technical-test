@@ -1,28 +1,25 @@
 import { escapeRegExp } from '@/lib/escapeRegExp';
-import { request, requestPaginated } from './client';
+import { request } from './client';
 import { type User, UserSchema } from './schemas';
-import type { ListParams, Paginated } from './types';
 
-export const USER_SORT_FIELDS = ['name', 'username', 'email'] as const;
-export type UserSortField = (typeof USER_SORT_FIELDS)[number];
-export type UserListParams = ListParams<UserSortField>;
+export interface UserListParams {
+  search?: string;
+}
 
 /**
- * Listado de usuarios con búsqueda, paginación y ordenación server side.
+ * Listado de usuarios con búsqueda server side, ordenado por nombre en el servidor.
  * La búsqueda usa `name_like` (solo nombre, parcial, sin distinguir mayúsculas; regex en servidor).
  */
-export function getUsers(params: UserListParams, signal?: AbortSignal): Promise<Paginated<User>> {
-  const search = params.search?.trim();
+export function getUsers({ search }: UserListParams, signal?: AbortSignal): Promise<User[]> {
+  const term = search?.trim();
 
-  return requestPaginated('/users', {
-    itemSchema: UserSchema,
+  return request('/users', {
+    schema: UserSchema.array(),
     signal,
     query: {
-      name_like: search ? escapeRegExp(search) : undefined,
-      _page: params.page,
-      _limit: params.limit,
-      _sort: params.sort,
-      _order: params.sort ? params.order : undefined,
+      name_like: term ? escapeRegExp(term) : undefined,
+      _sort: 'name',
+      _order: 'asc',
     },
   });
 }

@@ -3,13 +3,11 @@ import { posts, type RawPost, type RawUser, users } from './fixtures';
 
 export const API_URL = import.meta.env.VITE_API_URL;
 
-/** Réplica mínima de json-server: `name_like` (regex, case-insensitive), `_page`, `_limit`, `_sort`, `_order`. */
-function queryUsers(url: URL): { data: RawUser[]; total: number } | null {
+/** Réplica mínima de json-server: `name_like` (regex, case-insensitive), `_sort`, `_order`. */
+function queryUsers(url: URL): RawUser[] | null {
   const nameLike = url.searchParams.get('name_like');
   const sort = url.searchParams.get('_sort') as keyof RawUser | null;
   const order = url.searchParams.get('_order') === 'desc' ? -1 : 1;
-  const page = Number(url.searchParams.get('_page') ?? 1);
-  const limit = Number(url.searchParams.get('_limit') ?? users.length);
 
   let pattern: RegExp | null = null;
   try {
@@ -19,23 +17,20 @@ function queryUsers(url: URL): { data: RawUser[]; total: number } | null {
     return null;
   }
 
-  let result = pattern ? users.filter((u) => pattern.test(u.name)) : [...users];
+  const result = pattern ? users.filter((u) => pattern.test(u.name)) : [...users];
 
   if (sort) {
     result.sort((a, b) => String(a[sort]).localeCompare(String(b[sort])) * order);
   }
 
-  const total = result.length;
-  result = result.slice((page - 1) * limit, page * limit);
-
-  return { data: result, total };
+  return result;
 }
 
 export const handlers = [
   http.get(`${API_URL}/users`, ({ request }) => {
     const result = queryUsers(new URL(request.url));
     if (!result) return new HttpResponse(null, { status: 500 });
-    return HttpResponse.json(result.data, { headers: { 'X-Total-Count': String(result.total) } });
+    return HttpResponse.json(result);
   }),
 
   http.get(`${API_URL}/users/:id`, ({ params }) => {

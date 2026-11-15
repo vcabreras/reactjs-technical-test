@@ -2,123 +2,54 @@
 :root {
 }
 
+/* Fondo gris claro: las cards blancas (border-0 shadow-sm) destacan sobre él. */
+body {
+  background-color: var(--bs-tertiary-bg);
+}
+
+/* Avatar con iniciales */
+.avatar {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.05rem;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+  color: var(--bs-primary-text-emphasis);
+  background-color: var(--bs-primary-bg-subtle);
+}
+
+/* Lista de usuarios */
+.user-list__username {
+  color: var(--bs-secondary-color);
+}
+
+.user-list .list-group-item.active .avatar {
+  color: var(--bs-primary);
+  background-color: var(--bs-white);
+}
+
+.user-list .list-group-item.active .user-list__username {
+  color: rgb(255 255 255 / 0.75);
+}
+
+.user-list {
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* Refetch con datos previos visibles: se atenúa sin vaciar la lista. */
+.user-list--fetching {
+  opacity: 0.6;
+}
+
 /* SplitView: el panel de detalle acompaña el scroll en escritorio (≥ lg, 992px). */
 @media (min-width: 992px) {
   .split-view__main {
     position: sticky;
     top: 1rem;
-  }
-}
-
-/* DataTable */
-.data-table__row--clickable {
-  cursor: pointer;
-}
-
-.data-table__row--clickable:focus-visible {
-  outline: 2px solid var(--bs-primary);
-  outline-offset: -2px;
-}
-
-.data-table tbody {
-  transition: opacity 0.15s ease-in-out;
-}
-
-/* Refetch con datos previos visibles: se atenúan sin vaciar la tabla. */
-.data-table--fetching tbody {
-  opacity: 0.6;
-}
-
-/*
- * DataTable en modo cards (< md, 768px = breakpoint md de Bootstrap).
- * Cada fila es una card; cada celda muestra su etiqueta (data-label) y la columna
- * `cardTitle` hace de título. Las cabeceras ordenables quedan como chips para ordenar.
- * Es CSS y no Bootstrap porque ninguna utilidad convierte una tabla en cards.
- */
-@media (max-width: 767.98px) {
-  .data-table--cards,
-  .data-table--cards tbody,
-  .data-table--cards tr,
-  .data-table--cards td {
-    display: block;
-    width: 100%;
-  }
-
-  /* Cabecera → barra de chips de ordenación */
-  .data-table--cards thead tr {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .data-table--cards thead th {
-    display: none;
-    padding: 0;
-    border: 0;
-    background: transparent;
-  }
-
-  .data-table--cards thead th[data-sortable] {
-    display: block;
-  }
-
-  .data-table--cards thead th[data-sortable] .btn {
-    padding: 0.25rem 0.75rem !important;
-    border: 1px solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius-pill);
-    font-size: 0.875rem;
-  }
-
-  .data-table--cards thead th[aria-sort] .btn {
-    border-color: var(--bs-primary);
-    color: var(--bs-primary) !important;
-  }
-
-  /* Fila → card */
-  .data-table--cards tbody tr {
-    margin-bottom: 0.75rem;
-    padding: 0.5rem 0;
-    border: 1px solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius-lg);
-    background-color: var(--bs-body-bg);
-    box-shadow: var(--bs-box-shadow-sm);
-    overflow: hidden;
-  }
-
-  .data-table--cards tbody tr.table-active {
-    border-color: var(--bs-primary);
-  }
-
-  /* Celda → "Etiqueta  valor" */
-  .data-table--cards tbody td {
-    display: grid;
-    grid-template-columns: minmax(6rem, 35%) 1fr;
-    gap: 0.75rem;
-    padding: 0.25rem 1rem;
-    border: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .data-table--cards tbody td[data-label]::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: var(--bs-secondary-color);
-  }
-
-  .data-table--cards tbody td[data-card-title] {
-    display: block;
-    font-weight: 600;
-    font-size: 1.05rem;
-  }
-
-  .data-table--cards tbody td[data-card-title]::before {
-    content: none;
-  }
-
-  /* Estado vacío (colSpan, sin etiqueta) */
-  .data-table--cards tbody td:not([data-label]) {
-    display: block;
   }
 }
 

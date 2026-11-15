@@ -17,78 +17,98 @@ function recordUsersRequests(): URL[] {
   return urls;
 }
 
-/** Nombres de las filas de datos visibles (en el orden en que llegan del servidor). */
-function getRowNames(): string[] {
-  const body = screen.getAllByRole('rowgroup')[1];
-  if (!body) throw new Error('No hay tbody');
-  return within(body)
-    .getAllByRole('row')
-    .map((row) => within(row).getAllByRole('cell')[0]?.textContent ?? '');
+/** Nombre accesible de un enlace etiquetado con aria-labelledby. */
+function getLabelledName(element: HTMLElement): string {
+  const ids = element.getAttribute('aria-labelledby')?.split(' ') ?? [];
+  return ids.map((id) => document.getElementById(id)?.textContent ?? '').join(' ');
 }
 
-async function waitForRows(expected: string[]) {
+/** Nombres de los usuarios visibles (en el orden en que llegan del servidor). */
+function getUserNames(): string[] {
+  const list = screen.getByRole('list', { name: 'Usuarios' });
+  return within(list).getAllByRole('link').map(getLabelledName);
+}
+
+async function waitForUsers(expected: string[]) {
   await waitFor(() => {
-    expect(getRowNames()).toEqual(expected);
+    expect(getUserNames()).toEqual(expected);
   });
 }
 
-const PAGE_1 = [
+/** Todos los usuarios de los fixtures, ordenados por nombre (como los devuelve el servidor). */
+const ALL_USERS = [
   'Chelsey Dietrich',
   'Clementine Bauch',
   'Ervin Howell',
   'Kurtis Weissnat',
   'Leanne Graham',
+  'Mrs. Dennis Schulist',
+  'Patricia Lebsack',
 ];
 
 describe('UsersPage', () => {
-  it('muestra la carga y luego la primera página ordenada por nombre', async () => {
+  it('muestra la carga y luego todos los usuarios ordenados por nombre, sin paginación', async () => {
+    const requests = recordUsersRequests();
     renderRoute({ path: '/users' });
 
     expect(screen.getByText('Cargando usuarios…')).toBeInTheDocument();
 
-    await waitForRows(PAGE_1);
-    expect(screen.getByText('7 usuarios')).toBeInTheDocument();
-    expect(screen.getByText('Mostrando 1–5 de 7')).toBeInTheDocument();
+    await waitForUsers(ALL_USERS);
     expect(screen.getByText('Selecciona un usuario')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: /Paginación/ })).not.toBeInTheDocument();
+    expect(requests[0]?.searchParams.get('_sort')).toBe('name');
+    expect(requests[0]?.searchParams.has('_page')).toBe(false);
   });
 
   it('busca en el servidor con debounce y guarda el término en la URL', async () => {
     const requests = recordUsersRequests();
     const { router } = renderRoute({ path: '/users' });
-    await waitForRows(PAGE_1);
+    await waitForUsers(ALL_USERS);
 
     await userEvent.type(
       screen.getByRole('searchbox', { name: 'Buscar usuarios por nombre' }),
       'lea',
     );
 
-    await waitForRows(['Leanne Graham']);
+    await waitForUsers(['Leanne Graham']);
     expect(router.state.location.search).toBe('?q=lea');
     // Debounce: una sola petición con el término completo, no una por tecla.
     const searchRequests = requests.filter((url) => url.searchParams.has('name_like'));
     expect(searchRequests.map((url) => url.searchParams.get('name_like'))).toEqual(['lea']);
   });
 
-  it('buscar vuelve a la página 1', async () => {
-    const { router } = renderRoute({ path: '/users?page=2' });
-    await waitForRows(['Mrs. Dennis Schulist', 'Patricia Lebsack']);
+  it('al buscar, la lista vuelve arriba aunque se hubiera hecho scroll', async () => {
+    renderRoute({ path: '/users' });
+    await waitForUsers(ALL_USERS);
+    const scrollArea = screen.getByRole('list', { name: 'Usuarios' }).parentElement;
+    if (!scrollArea) throw new Error('Sin zona de scroll');
+    scrollArea.scrollTop = 200;
 
     await userEvent.type(screen.getByRole('searchbox'), 'e');
 
     await waitFor(() => {
-      expect(router.state.location.search).toBe('?q=e');
+      expect(screen.getByRole('list', { name: 'Usuarios' }).parentElement).not.toBe(scrollArea);
     });
+    expect(screen.getByRole('list', { name: 'Usuarios' }).parentElement?.scrollTop).toBe(0);
+  });
+
+  it('lee la búsqueda inicial de la URL', async () => {
+    renderRoute({ path: '/users?q=mrs.' });
+
+    await waitForUsers(['Mrs. Dennis Schulist']);
+    expect(screen.getByRole('searchbox')).toHaveValue('mrs.');
   });
 
   it('sin resultados muestra el estado vacío y permite ver todos los usuarios', async () => {
-    renderRoute({ path: '/users?q=zzz' });
+    const { router } = renderRoute({ path: '/users?q=zzz' });
 
     expect(await screen.findByText('No hay usuarios que coincidan con "zzz"')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Ver todos los usuarios' }));
 
-    await waitForRows(PAGE_1);
+    await waitForUsers(ALL_USERS);
     expect(screen.getByRole('searchbox')).toHaveValue('');
+    expect(router.state.location.search).toBe('');
   });
 
   it('muestra el error del servidor y se recupera al reintentar', async () => {
@@ -104,64 +124,13 @@ describe('UsersPage', () => {
 
     await userEvent.click(within(alert).getByRole('button', { name: 'Reintentar' }));
 
-    await waitForRows(PAGE_1);
+    await waitForUsers(ALL_USERS);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
-  it('pagina en el servidor y guarda la página en la URL', async () => {
-    const { router } = renderRoute({ path: '/users' });
-    await waitForRows(PAGE_1);
-
-    await userEvent.click(screen.getByRole('button', { name: 'Página siguiente' }));
-
-    await waitForRows(['Mrs. Dennis Schulist', 'Patricia Lebsack']);
-    expect(router.state.location.search).toBe('?page=2');
-    expect(screen.getByText('Mostrando 6–7 de 7')).toBeInTheDocument();
-  });
-
-  it('ordena en el servidor al pulsar una cabecera y vuelve a la página 1', async () => {
-    const { router } = renderRoute({ path: '/users?page=2' });
-    await waitForRows(['Mrs. Dennis Schulist', 'Patricia Lebsack']);
-
-    await userEvent.click(screen.getByRole('button', { name: 'Nombre' }));
-
-    await waitForRows([
-      'Patricia Lebsack',
-      'Mrs. Dennis Schulist',
-      'Leanne Graham',
-      'Kurtis Weissnat',
-      'Ervin Howell',
-    ]);
-    expect(router.state.location.search).toBe('?order=desc');
-    expect(screen.getByRole('columnheader', { name: /Nombre/ })).toHaveAttribute(
-      'aria-sort',
-      'descending',
-    );
-  });
-
-  it('normaliza params de URL inválidos antes de pedir al servidor', async () => {
-    const requests = recordUsersRequests();
-    renderRoute({ path: '/users?page=abc&limit=7&sort=password&order=x' });
-
-    await waitForRows(PAGE_1);
-    const params = requests[0]?.searchParams;
-    expect(params?.get('_page')).toBe('1');
-    expect(params?.get('_limit')).toBe('5');
-    expect(params?.get('_sort')).toBe('name');
-    expect(params?.get('_order')).toBe('asc');
-  });
-
-  it('una página fuera de rango ofrece volver a la primera', async () => {
-    renderRoute({ path: '/users?page=9' });
-
-    await userEvent.click(await screen.findByRole('button', { name: 'Ir a la primera página' }));
-
-    await waitForRows(PAGE_1);
   });
 
   it('al elegir un usuario navega a su detalle conservando la búsqueda', async () => {
     const { router } = renderRoute({ path: '/users?q=lea' });
-    await waitForRows(['Leanne Graham']);
+    await waitForUsers(['Leanne Graham']);
 
     await userEvent.click(screen.getByRole('link', { name: 'Leanne Graham' }));
 

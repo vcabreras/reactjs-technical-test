@@ -11,56 +11,59 @@ function captureUsersRequest(): () => URL | undefined {
   server.use(
     http.get(`${API_URL}/users`, ({ request }) => {
       captured = new URL(request.url);
-      return HttpResponse.json([], { headers: { 'X-Total-Count': '0' } });
+      return HttpResponse.json([]);
     }),
   );
   return () => captured;
 }
 
 describe('getUsers', () => {
-  it('envía búsqueda, paginación y ordenación como params de json-server', async () => {
+  it('busca con name_like y ordena por nombre en el servidor', async () => {
     const getUrl = captureUsersRequest();
 
-    await getUsers({ search: 'lean', page: 2, limit: 5, sort: 'email', order: 'desc' });
+    await getUsers({ search: 'lean' });
 
     const params = getUrl()?.searchParams;
     expect(params?.get('name_like')).toBe('lean');
-    expect(params?.get('_page')).toBe('2');
-    expect(params?.get('_limit')).toBe('5');
-    expect(params?.get('_sort')).toBe('email');
-    expect(params?.get('_order')).toBe('desc');
+    expect(params?.get('_sort')).toBe('name');
+    expect(params?.get('_order')).toBe('asc');
+    expect(params?.has('_page')).toBe(false);
   });
 
   it('escapa el término de búsqueda y recorta espacios', async () => {
     const getUrl = captureUsersRequest();
 
-    await getUsers({ search: '  mrs. (d ', page: 1, limit: 5 });
+    await getUsers({ search: '  mrs. (d ' });
 
     expect(getUrl()?.searchParams.get('name_like')).toBe('mrs\\. \\(d');
   });
 
-  it('omite name_like con búsqueda vacía y _order sin _sort', async () => {
+  it('omite name_like con búsqueda vacía', async () => {
     const getUrl = captureUsersRequest();
 
-    await getUsers({ search: '   ', page: 1, limit: 5, order: 'asc' });
+    await getUsers({ search: '   ' });
 
-    const params = getUrl()?.searchParams;
-    expect(params?.has('name_like')).toBe(false);
-    expect(params?.has('_order')).toBe(false);
+    expect(getUrl()?.searchParams.has('name_like')).toBe(false);
   });
 
-  it('devuelve los usuarios filtrados y el total del servidor', async () => {
-    const result = await getUsers({ search: 'mrs. d', page: 1, limit: 5 });
+  it('devuelve los usuarios filtrados por el servidor', async () => {
+    const users = await getUsers({ search: 'mrs. d' });
 
-    expect(result.total).toBe(1);
-    expect(result.data.map((u) => u.name)).toEqual(['Mrs. Dennis Schulist']);
+    expect(users.map((u) => u.name)).toEqual(['Mrs. Dennis Schulist']);
   });
 
-  it('pagina en el servidor y devuelve el total sin paginar', async () => {
-    const result = await getUsers({ page: 2, limit: 5, sort: 'name', order: 'asc' });
+  it('devuelve todos los usuarios ordenados por nombre sin búsqueda', async () => {
+    const users = await getUsers({});
 
-    expect(result.total).toBe(7);
-    expect(result.data).toHaveLength(2);
+    expect(users.map((u) => u.name)).toEqual([
+      'Chelsey Dietrich',
+      'Clementine Bauch',
+      'Ervin Howell',
+      'Kurtis Weissnat',
+      'Leanne Graham',
+      'Mrs. Dennis Schulist',
+      'Patricia Lebsack',
+    ]);
   });
 });
 

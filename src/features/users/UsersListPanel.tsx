@@ -1,113 +1,93 @@
 import { useQuery } from '@tanstack/react-query';
-import { useLocation, useNavigate } from 'react-router';
 import { getErrorMessage } from '@/api/errors';
 import type { User } from '@/api/schemas';
-import { PageHeader } from '@/components/layout';
-import { Button, DataTable, SearchInput } from '@/components/ui';
+import { Button, EmptyState, ErrorState, SearchInput } from '@/components/ui';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useListSearchParams } from '@/hooks/useListSearchParams';
-import { userColumns } from './columns';
+import { useSearchParamState } from '@/hooks/useSearchParamState';
 import { usersListQueryOptions } from './queries';
-import { isUserSortField, USERS_LIST_CONFIG } from './usersListConfig';
+import { UserList, UserListSkeleton } from './UserList';
 
 const SEARCH_DEBOUNCE_MS = 300;
-/** Fallback estable: un `[]` nuevo en cada render invalidaría los row models de la tabla. */
+const SKELETON_ROWS = 6;
 const NO_USERS: User[] = [];
-
-function getUserRowId(user: User): string {
-  return String(user.id);
-}
 
 interface UsersListPanelProps {
   selectedUserId?: string;
 }
 
-/** Listado de usuarios: búsqueda, paginación y ordenación server side con estado en la URL. */
+/**
+ * Listado de usuarios con búsqueda server side (`?q=` en la URL, con debounce). Sin paginación:
+ * en escritorio la lista ocupa el alto disponible y hace scroll propio.
+ */
 export function UsersListPanel({ selectedUserId }: UsersListPanelProps) {
-  const navigate = useNavigate();
-  const { search: locationSearch } = useLocation();
-  const list = useListSearchParams(USERS_LIST_CONFIG);
-  const debouncedSearch = useDebouncedValue(list.search.trim(), SEARCH_DEBOUNCE_MS);
+  const [search, setSearch] = useSearchParamState('q');
+  const debouncedSearch = useDebouncedValue(search.trim(), SEARCH_DEBOUNCE_MS);
 
-  const usersQuery = useQuery(
-    usersListQueryOptions({
-      search: debouncedSearch,
-      page: list.page,
-      limit: list.limit,
-      sort: list.sort,
-      order: list.order,
-    }),
-  );
+  const usersQuery = useQuery(usersListQueryOptions({ search: debouncedSearch }));
 
-  const users = usersQuery.data?.data ?? NO_USERS;
-  const total = usersQuery.data?.total ?? 0;
-  const isTyping = list.search.trim() !== debouncedSearch;
-  const isPageOutOfRange = total > 0 && users.length === 0 && list.page > 1;
+  const users = usersQuery.data ?? NO_USERS;
+  const isTyping = search.trim() !== debouncedSearch;
+  const isRefetching = usersQuery.isFetching && !usersQuery.isPending;
 
-  return (
-    <div>
-      <PageHeader
-        title="Usuarios"
-        subtitle={usersQuery.data ? `${total} ${total === 1 ? 'usuario' : 'usuarios'}` : undefined}
-      />
+  const renderContent = () => {
+    if (usersQuery.isPending) {
+      return <UserListSkeleton rows={SKELETON_ROWS} />;
+    }
 
-      <form role="search" onSubmit={(event) => event.preventDefault()}>
-        <SearchInput
-          label="Buscar usuarios por nombre"
-          placeholder="Buscar por nombre…"
-          value={list.search}
-          onValueChange={list.setSearch}
-          isSearching={isTyping || (usersQuery.isFetching && !usersQuery.isPending)}
-        />
-      </form>
+    if (usersQuery.isError) {
+      return (
+        <div className="p-3">
+          <ErrorState
+            message={getErrorMessage(usersQuery.error)}
+            onRetry={() => void usersQuery.refetch()}
+            isRetrying={usersQuery.isFetching}
+          />
+        </div>
+      );
+    }
 
-      <DataTable
-        caption="Usuarios"
-        data={users}
-        columns={userColumns}
-        getRowId={getUserRowId}
-        rowCount={total}
-        pagination={{ pageIndex: list.page - 1, pageSize: list.limit }}
-        onPaginationChange={({ pageIndex, pageSize }) => {
-          if (pageSize !== list.limit) list.setPageSize(pageSize);
-          else list.setPage(pageIndex + 1);
-        }}
-        pageSizeOptions={USERS_LIST_CONFIG.pageSizes}
-        sorting={[{ id: list.sort, desc: list.order === 'desc' }]}
-        onSortingChange={([next]) => {
-          if (next && isUserSortField(next.id)) {
-            list.setSorting(next.id, next.desc ? 'desc' : 'asc');
-          }
-        }}
-        isLoading={usersQuery.isPending}
-        isFetching={usersQuery.isFetching && !usersQuery.isPending}
-        loadingLabel="Cargando usuarios…"
-        errorMessage={usersQuery.isError ? getErrorMessage(usersQuery.error) : undefined}
-        onRetry={() => void usersQuery.refetch()}
-        isRetrying={usersQuery.isFetching}
-        emptyTitle={
-          isPageOutOfRange
-            ? 'Esta página no existe'
-            : debouncedSearch
+    if (users.length === 0) {
+      return (
+        <EmptyState
+          title={
+            debouncedSearch
               ? `No hay usuarios que coincidan con "${debouncedSearch}"`
               : 'No hay usuarios'
-        }
-        emptyAction={
-          isPageOutOfRange ? (
-            <Button variant="outline-primary" onClick={() => list.setPage(1)}>
-              Ir a la primera página
-            </Button>
-          ) : debouncedSearch ? (
-            <Button variant="outline-primary" onClick={() => list.setSearch('')}>
-              Ver todos los usuarios
-            </Button>
-          ) : undefined
-        }
-        onRowClick={(user) =>
-          void navigate({ pathname: `/users/${user.id}`, search: locationSearch })
-        }
-        selectedRowId={selectedUserId}
-      />
+          }
+          action={
+            debouncedSearch && (
+              <Button variant="outline-primary" onClick={() => setSearch('')}>
+                Ver todos los usuarios
+              </Button>
+            )
+          }
+        />
+      );
+    }
+
+    return <UserList users={users} selectedUserId={selectedUserId} isFetching={isRefetching} />;
+  };
+
+  return (
+    <div className="card border-0 shadow-sm overflow-hidden fill-panel">
+      {/* flex-grow-0: .card-body trae flex 1 1 auto y, con la card a toda altura, empujaría la lista al centro. */}
+      <div className="card-body pb-2 flex-grow-0 flex-shrink-0">
+        <form role="search" onSubmit={(event) => event.preventDefault()}>
+          <SearchInput
+            label="Buscar usuarios por nombre"
+            placeholder="Buscar usuario…"
+            containerClassName="mb-0"
+            value={search}
+            onValueChange={setSearch}
+            isSearching={isTyping || isRefetching}
+          />
+        </form>
+      </div>
+
+      {/* `key`: cada búsqueda monta la zona de scroll de nuevo y los resultados empiezan arriba. */}
+      <div key={debouncedSearch} className="fill-panel__scroll">
+        {renderContent()}
+      </div>
     </div>
   );
 }

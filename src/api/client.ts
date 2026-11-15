@@ -1,6 +1,5 @@
 import type { z } from 'zod';
 import { ApiError } from './errors';
-import type { Paginated } from './types';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 type QueryValue = string | number | boolean | null | undefined;
@@ -18,12 +17,7 @@ export interface RequestOptions<TSchema extends z.ZodType> extends BaseRequestOp
   schema: TSchema;
 }
 
-export interface PaginatedRequestOptions<TItemSchema extends z.ZodType> extends BaseRequestOptions {
-  itemSchema: TItemSchema;
-}
-
 const DEFAULT_TIMEOUT_MS = 10_000;
-const TOTAL_COUNT_HEADER = 'X-Total-Count';
 
 function getBaseUrl(): string {
   const baseUrl: unknown = import.meta.env.VITE_API_URL;
@@ -122,20 +116,6 @@ async function parseBody<TSchema extends z.ZodType>(
   return result.data;
 }
 
-function parseTotalCount(response: Response, label: string): number {
-  const raw = response.headers.get(TOTAL_COUNT_HEADER);
-  const total = raw === null || raw.trim() === '' ? Number.NaN : Number(raw);
-
-  if (!Number.isInteger(total) || total < 0) {
-    throw new ApiError({
-      kind: 'parse',
-      message: `${label}: cabecera ${TOTAL_COUNT_HEADER} ausente o inválida (${String(raw)})`,
-    });
-  }
-
-  return total;
-}
-
 /** Petición JSON validada con Zod. */
 export async function request<TSchema extends z.ZodType>(
   path: string,
@@ -143,17 +123,4 @@ export async function request<TSchema extends z.ZodType>(
 ): Promise<z.output<TSchema>> {
   const response = await send(path, options);
   return parseBody(response, schema, `${options.method ?? 'GET'} ${path}`);
-}
-
-/** Petición de un listado paginado: valida cada elemento y lee el total de `X-Total-Count`. */
-export async function requestPaginated<TItemSchema extends z.ZodType>(
-  path: string,
-  { itemSchema, ...options }: PaginatedRequestOptions<TItemSchema>,
-): Promise<Paginated<z.output<TItemSchema>>> {
-  const response = await send(path, options);
-  const label = `${options.method ?? 'GET'} ${path}`;
-  const total = parseTotalCount(response, label);
-  const data = await parseBody(response, itemSchema.array(), label);
-
-  return { data, total };
 }

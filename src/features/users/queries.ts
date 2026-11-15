@@ -12,7 +12,7 @@ export const userKeys = {
 
 const USERS_STALE_TIME_MS = 60_000;
 
-/** Listado server side: búsqueda, página y orden forman parte de la key. */
+/** Listado con búsqueda server side: el término forma parte de la key. */
 export function usersListQueryOptions(params: UserListParams) {
   return queryOptions({
     queryKey: userKeys.list(params),

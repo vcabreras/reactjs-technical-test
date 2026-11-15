@@ -7,7 +7,7 @@ export type ApiErrorKind =
   | 'timeout'
   /** La petición fue cancelada por quien la lanzó (p. ej. TanStack Query). */
   | 'aborted'
-  /** La respuesta no es JSON válido, no cumple el esquema o falta una cabecera esperada. */
+  /** La respuesta no es JSON válido o no cumple el esquema. */
   | 'parse'
   /** Los datos de entrada no cumplen su esquema; la petición no llega a enviarse. */
   | 'validation'
