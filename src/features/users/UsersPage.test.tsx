@@ -139,4 +139,14 @@ describe('UsersPage', () => {
     });
     expect(router.state.location.search).toBe('?q=lea');
   });
+
+  it('marca el usuario seleccionado con aria-current y describe su @usuario', async () => {
+    renderRoute({ path: '/users/1' });
+    await waitForUsers(ALL_USERS);
+
+    const leanne = screen.getByRole('link', { name: 'Leanne Graham' });
+    expect(leanne).toHaveAttribute('aria-current', 'page');
+    expect(leanne).toHaveAccessibleDescription('@Bret');
+    expect(screen.getByRole('link', { name: 'Ervin Howell' })).not.toHaveAttribute('aria-current');
+  });
 });

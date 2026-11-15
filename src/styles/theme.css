@@ -101,6 +101,25 @@ body:has(.drawer[open]) {
   }
 }
 
+/* Post recién creado: resaltado breve que se desvanece. */
+@keyframes post-card-highlight {
+  from {
+    background-color: var(--bs-primary-bg-subtle);
+    border-color: var(--bs-primary-border-subtle);
+  }
+}
+
+.post-card--new {
+  animation: post-card-highlight 2.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-card--new {
+    animation: none;
+    border-color: var(--bs-primary-border-subtle);
+  }
+}
+
 /* SearchInput tiene su propio botón limpiar: ocultar el nativo de WebKit/Blink. */
 input[type='search']::-webkit-search-cancel-button {
   appearance: none;

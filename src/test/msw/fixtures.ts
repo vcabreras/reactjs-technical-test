@@ -57,4 +57,12 @@ export const posts: RawPost[] = [
   { id: 1, userId: 1, title: 'Primer post de Leanne', body: 'Cuerpo 1' },
   { id: 2, userId: 1, title: 'Segundo post de Leanne', body: 'Cuerpo 2' },
   { id: 3, userId: 2, title: 'Post de Ervin', body: 'Cuerpo 3' },
+  // Usuario 3: 7 posts para probar la paginación (5 por página).
+  { id: 10, userId: 3, title: 'Post 1 de Clementine', body: 'Cuerpo 10' },
+  { id: 11, userId: 3, title: 'Post 2 de Clementine', body: 'Cuerpo 11' },
+  { id: 12, userId: 3, title: 'Post 3 de Clementine', body: 'Cuerpo 12' },
+  { id: 13, userId: 3, title: 'Post 4 de Clementine', body: 'Cuerpo 13' },
+  { id: 14, userId: 3, title: 'Post 5 de Clementine', body: 'Cuerpo 14' },
+  { id: 15, userId: 3, title: 'Post 6 de Clementine', body: 'Cuerpo 15' },
+  { id: 16, userId: 3, title: 'Post 7 de Clementine', body: 'Cuerpo 16' },
 ];

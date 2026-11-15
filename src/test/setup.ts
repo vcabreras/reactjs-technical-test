@@ -3,8 +3,10 @@ import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { server } from './msw/server';
 
-// jsdom no implementa scrollTo (lo usa <ScrollRestoration /> de React Router).
+// jsdom no implementa scrollTo (lo usa <ScrollRestoration /> de React Router) ni scrollIntoView
+// (lo usa la paginación de posts).
 window.scrollTo = () => undefined;
+Element.prototype.scrollIntoView = () => undefined;
 
 // jsdom no implementa showModal/close de <dialog> (lo usa Drawer). Stub mínimo: solo `open`.
 if (typeof HTMLDialogElement.prototype.showModal !== 'function') {

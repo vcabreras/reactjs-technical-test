@@ -1,5 +1,6 @@
 import { Navigate, type RouteObject } from 'react-router';
 import { AppLayout } from '@/components/layout';
+import { UserPostsPanel } from '@/features/posts/UserPostsPanel';
 import { SelectUserHint, UsersPage } from '@/features/users/UsersPage';
 import { NotFoundPage } from './NotFoundPage';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
@@ -20,7 +21,10 @@ export const appRoutes: RouteObject[] = [
           {
             path: 'users',
             Component: UsersPage,
-            children: [{ index: true, Component: SelectUserHint }],
+            children: [
+              { index: true, Component: SelectUserHint },
+              { path: ':userId', Component: UserPostsPanel },
+            ],
           },
           { path: '*', Component: NotFoundPage },
         ],
