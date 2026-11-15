@@ -23,7 +23,7 @@ describe('appRoutes', () => {
     expect(await screen.findByText('Página no encontrada')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ir a usuarios' })).toHaveAttribute('href', '/users');
     await waitFor(() => {
-      expect(document.title).toBe('Página no encontrada · UserPosts');
+      expect(document.title).toBe('Página no encontrada · Usuarios');
     });
   });
 

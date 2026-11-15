@@ -13,7 +13,7 @@ export function RouteErrorBoundary() {
 
   return (
     <>
-      <title>Error · UserPosts</title>
+      <title>Error · Usuarios</title>
       <ErrorState
         title="Algo salió mal"
         message={getErrorMessage(error)}

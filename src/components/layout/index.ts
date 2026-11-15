@@ -1,4 +1,4 @@
-export { AppLayout, MAIN_CONTENT_ID } from './AppLayout/AppLayout';
+export { AppLayout } from './AppLayout/AppLayout';
 export { BackLink } from './BackLink/BackLink';
 export type { BackLinkProps } from './BackLink/BackLink';
 export { PageHeader } from './PageHeader/PageHeader';

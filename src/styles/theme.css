@@ -1,6 +1,4 @@
-/* Overrides de tema sobre variables CSS de Bootstrap 5.3 */
-:root {
-}
+/* Estilos propios sobre las variables CSS de Bootstrap 5.3 (sin overrides de :root). */
 
 /* Fondo gris claro: las cards blancas (border-0 shadow-sm) destacan sobre él. */
 body {
@@ -45,11 +43,61 @@ body {
   opacity: 0.6;
 }
 
-/* SplitView: el panel de detalle acompaña el scroll en escritorio (≥ lg, 992px). */
+/*
+ * Altura limitada a la pantalla en escritorio (≥ lg, 992px = breakpoint lg de Bootstrap):
+ * navbar y footer fijos, el contenido ocupa el alto restante y cada panel hace scroll propio
+ * si no cabe. En móvil (un panel cada vez, teclado en pantalla) se mantiene el scroll de página.
+ * Bootstrap no tiene utilidades responsive de altura/overflow, por eso es CSS propio.
+ */
 @media (min-width: 992px) {
-  .split-view__main {
-    position: sticky;
-    top: 1rem;
+  .app-shell {
+    height: 100dvh;
+  }
+
+  .app-shell__main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* Página que llena el main: cabecera + SplitView. */
+  .fill-page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .split-view {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .split-view__col {
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* Panel que ocupa la columna: partes fijas (flex-shrink-0) + una zona con scroll. */
+  .fill-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .fill-panel__grow {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .fill-panel__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 

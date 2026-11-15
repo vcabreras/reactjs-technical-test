@@ -13,15 +13,28 @@ export interface SplitViewProps {
   activePanel: SplitViewPanel;
 }
 
-/** Maestro-detalle: `aside` (col-lg-5) + `main` (col-lg-7, sticky en escritorio). */
+/**
+ * Maestro-detalle: `aside` (col-lg-4) + `main` (col-lg-8). En escritorio ocupa el alto disponible
+ * (`.split-view` en theme.css) y cada columna limita su contenido a ese alto.
+ */
 export function SplitView({ aside, main, activePanel }: SplitViewProps) {
   return (
-    <div className="row g-4">
-      <div className={cx('col-12 col-lg-5', activePanel !== 'aside' && 'd-none d-lg-block')}>
+    <div className="row g-4 split-view">
+      <div
+        className={cx(
+          'col-12 col-lg-4 split-view__col',
+          activePanel !== 'aside' && 'd-none d-lg-block',
+        )}
+      >
         {aside}
       </div>
-      <div className={cx('col-12 col-lg-7', activePanel !== 'main' && 'd-none d-lg-block')}>
-        <div className="split-view__main">{main}</div>
+      <div
+        className={cx(
+          'col-12 col-lg-8 split-view__col',
+          activePanel !== 'main' && 'd-none d-lg-block',
+        )}
+      >
+        {main}
       </div>
     </div>
   );

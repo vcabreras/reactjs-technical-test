@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/ui';
 export function NotFoundPage() {
   return (
     <>
-      <title>Página no encontrada · UserPosts</title>
+      <title>Página no encontrada · Usuarios</title>
       <EmptyState
         icon={<SearchX size={40} strokeWidth={1.5} />}
         title="Página no encontrada"
