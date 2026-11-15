@@ -22,4 +22,7 @@ export type { SkeletonGroupProps, SkeletonProps } from './Skeleton/Skeleton';
 export { Spinner } from './Spinner/Spinner';
 export type { SpinnerProps, SpinnerSize } from './Spinner/Spinner';
 export { Textarea } from './Textarea/Textarea';
+export { notify } from './Toast/notify';
+export type { NotifyOptions } from './Toast/notify';
+export { Toaster } from './Toast/Toaster';
 export type { TextareaProps } from './Textarea/Textarea';
