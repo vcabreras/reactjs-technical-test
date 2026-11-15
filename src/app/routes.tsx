@@ -1,5 +1,6 @@
 import { Navigate, type RouteObject } from 'react-router';
 import { AppLayout } from '@/components/layout';
+import { SelectUserHint, UsersPage } from '@/features/users/UsersPage';
 import { NotFoundPage } from './NotFoundPage';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
 
@@ -16,6 +17,11 @@ export const appRoutes: RouteObject[] = [
         ErrorBoundary: RouteErrorBoundary,
         children: [
           { index: true, element: <Navigate to="/users" replace /> },
+          {
+            path: 'users',
+            Component: UsersPage,
+            children: [{ index: true, Component: SelectUserHint }],
+          },
           { path: '*', Component: NotFoundPage },
         ],
       },

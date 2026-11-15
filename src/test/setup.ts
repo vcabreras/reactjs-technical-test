@@ -3,6 +3,9 @@ import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { server } from './msw/server';
 
+// jsdom no implementa scrollTo (lo usa <ScrollRestoration /> de React Router).
+window.scrollTo = () => undefined;
+
 // jsdom no implementa Pointer Capture (lo usa Sonner para el swipe de los toasts).
 if (!('setPointerCapture' in Element.prototype)) {
   Object.assign(Element.prototype, {
