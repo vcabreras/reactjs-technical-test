@@ -119,6 +119,7 @@ Lista cerrada (ver regla 2).
 | Formularios | `react-hook-form` + `zod` + `@hookform/resolvers` |
 | HTTP | `fetch` nativo con cliente propio (sin Axios ni ky) |
 | Toasts | `sonner` (envuelto en `ui/toast`) |
+| Iconos | `lucide-react` (importar iconos sueltos: `import { Search } from 'lucide-react'`) |
 | Tests | `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom`, `msw` |
 | Calidad | `eslint` (+ `@eslint/js`, `typescript-eslint`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `eslint-config-prettier`, `globals`), `prettier` |
 | Tooling | `typescript`, `@vitejs/plugin-react`, `@types/react`, `@types/react-dom`, `@types/node`, `@testing-library/dom` |

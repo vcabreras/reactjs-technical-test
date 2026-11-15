@@ -3,6 +3,8 @@ export type { ButtonProps, ButtonSize, ButtonVariant } from './Button/Button';
 export type { CharacterCount, FieldProps } from './FormField/FormField';
 export { Input } from './Input/Input';
 export type { InputProps } from './Input/Input';
+export { SearchInput } from './SearchInput/SearchInput';
+export type { SearchInputProps } from './SearchInput/SearchInput';
 export { Spinner } from './Spinner/Spinner';
 export type { SpinnerProps, SpinnerSize } from './Spinner/Spinner';
 export { Textarea } from './Textarea/Textarea';
