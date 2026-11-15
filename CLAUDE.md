@@ -41,8 +41,8 @@ Ninguna tarea justifica saltarse estas reglas. Si una parece imposible de cumpli
 14. **Cada endpoint se define en `src/api/` y siempre pasa por `request()`**:
     nunca `fetch` directo en componentes, hooks ni features.
 15. Todo endpoint: valida la respuesta con su **esquema Zod**, acepta `signal`, y ante cualquier fallo
-    (red, timeout, cancelación, HTTP no-ok, parseo, entrada inválida) lanza **`ApiError`**. Nunca devolver `undefined`/`null` para señalar un error ni
-    tragarse excepciones.
+    (red, timeout, cancelación, HTTP no-ok, parseo, entrada inválida) lanza **`ApiError`**.
+    Nunca devolver `undefined`/`null` para señalar un error ni tragarse excepciones.
 16. Mensajes al usuario solo vía `getErrorMessage(error)`.
 17. **Toda vista que consume datos muestra los estados loading, error (con reintentar) y empty.**
 
@@ -68,8 +68,9 @@ Ninguna tarea justifica saltarse estas reglas. Si una parece imposible de cumpli
     `@ts-ignore`, non-null assertions (`!`) y `eslint-disable` sin comentario que lo justifique.
 25. Tipos de dominio derivados de Zod; no duplicar interfaces.
 26. Antes de dar una tarea por terminada: `pnpm typecheck`, `pnpm lint` y `pnpm format:check` sin errores.
-27. Todo componente de `ui/` y todo flujo de `features/` nuevo lleva su test. Los tests **nunca**
-    llaman a la red real: siempre MSW (`onUnhandledFrame: 'error'`).
+27. Todo componente de `ui/` y todo flujo de `features/` nuevo lleva su test (los internos, como
+    `FormField`, se prueban a través de los componentes que los usan: `Input`, `Textarea`). Los tests
+    **nunca** llaman a la red real: siempre MSW (`onUnhandledFrame: 'error'`).
 
 ### Seguridad y accesibilidad
 28. Base URL y config en variables `VITE_*` con `.env.example`; nunca hardcodear URLs ni commitear `.env`.
@@ -150,6 +151,7 @@ src/
     routes.tsx           # appRoutes
     queryClient.ts       # createQueryClient() + shouldRetry
     RouteErrorBoundary.tsx, NotFoundPage.tsx
+    AppLoading.tsx       # HydrateFallback: primera carga directa en una ruta diferida
   api/
     client.ts            # request(): baseURL, query params, JSON, ApiError, signal, timeout, Zod
     errors.ts            # ApiError { kind, status, cause, isNotFound } + isApiError + getErrorMessage()
@@ -166,7 +168,8 @@ src/
   lib/                   # utilidades puras: cx, escapeRegExp
   styles/theme.css       # CSS propio sobre variables de Bootstrap
   test/
-    setup.ts             # jest-dom, MSW y stubs de jsdom (scrollTo, <dialog>, Pointer Capture)
+    setup.ts             # jest-dom, MSW y stubs de jsdom (scrollTo, scrollIntoView, <dialog>,
+                         # Pointer Capture)
     msw/                 # fixtures, handlers (réplica de json-server), server
     render.tsx           # renderRoute({ path }) con router en memoria y QueryClient de test
 ```
@@ -187,11 +190,11 @@ Todos extienden las props nativas del elemento HTML cuando envuelven uno y son a
   (React 19), compatibles con `register()`.
 - **SearchInput**: controlado (`value`, `onValueChange`), icono, botón limpiar (también Escape) que
   devuelve el foco e indicador `isSearching`. El debounce lo gestiona quien lo usa.
-- **Pagination**: `page`, `pageCount`, `onPageChange`, `total`, `pageSize`, `label`. `<nav aria-label>` (nombre distinto si hay varias en la página),
-  `aria-current="page"`, anterior/siguiente deshabilitados en los extremos, resumen "Mostrando X–Y de Z"
-  (`aria-live`). Con una página oculta la navegación; sin resultados no renderiza nada.
-  Solo la usan las publicaciones.
-  En móvil: solo anterior/siguiente + "Página X de Y".
+- **Pagination**: `page`, `pageCount`, `onPageChange`, `total`, `pageSize`, `label`.
+  `<nav aria-label>` (nombre distinto si hay varias en la página), `aria-current="page"`,
+  anterior/siguiente deshabilitados en los extremos, resumen "Mostrando X–Y de Z" (`aria-live`).
+  Con una página oculta la navegación; sin resultados no renderiza nada. En móvil: solo
+  anterior/siguiente + "Página X de Y". Solo la usan las publicaciones.
 - **ErrorState** (`role="alert"`, `title`, `message`, `onRetry`, `isRetrying`), **EmptyState**
   (`role="status"`, `title`, `description`, `icon`, `action`), **Skeleton** / **SkeletonGroup**
   (barras `aria-hidden` dentro de un `role="status"` con etiqueta).
@@ -216,13 +219,14 @@ Todos extienden las props nativas del elemento HTML cuando envuelven uno y son a
 ```ts
 appRoutes = [{
   Component: AppLayout, ErrorBoundary: RouteErrorBoundary,      // fallo del propio layout
+  HydrateFallback: AppLoading,                                   // primera carga en ruta diferida
   children: [{
     ErrorBoundary: RouteErrorBoundary,                           // error de página: mantiene navbar/footer
     children: [
       { index: true, element: <Navigate to="/users" replace /> },
       { path: 'users', Component: UsersPage, children: [
         { index: true, Component: SelectUserHint },
-        { path: ':userId', Component: UserPostsPanel },
+        { path: ':userId', lazy: () => import('@/features/posts/UserPostsPanel') … },  // diferida
       ]},
       { path: '*', Component: NotFoundPage },
     ],
@@ -230,6 +234,10 @@ appRoutes = [{
 }]
 ```
 
+- **Carga diferida**: `/users/:userId` (formulario, React Hook Form, Drawer) va en su propio chunk.
+  `vite.config.ts` agrupa React, React Router y TanStack en `react-vendor` (solo esas: un grupo
+  genérico de `node_modules` arrastraría a la carga inicial las librerías de la ruta diferida).
+  Ningún chunk debe superar los 500 kB.
 - **Misma vista en móvil y escritorio**: los usuarios son siempre una lista (avatar + nombre + @usuario).
 - **≥ lg**: maestro-detalle 4/8 limitado al alto de la pantalla. Clases en `theme.css`:
   `.app-shell` → `.fill-page` → `.split-view` → `.fill-panel` (partes fijas con `flex-shrink-0`) y
@@ -237,6 +245,9 @@ appRoutes = [{
   Detalle: cabecera y paginación fijas, lista de posts con scroll.
 - **< lg**: una vista cada vez según la URL (lista o detalle) con `d-none d-lg-block`.
 - La búsqueda (`?q=`) se conserva al ir al detalle y volver.
+- **El scroll vuelve arriba**: la zona de scroll lleva una `key` ligada a la búsqueda (usuarios) y a
+  la página (publicaciones), así que se vuelve a montar y empieza arriba. En móvil, al cambiar de
+  página de publicaciones, `scrollIntoView` lleva la vista al contador.
 - Título de pestaña con `<title>` de React 19 (uno por vista: "Usuarios", "<nombre> · Usuarios"…;
   el listado solo lo pone sin usuario seleccionado).
 
@@ -252,6 +263,8 @@ appRoutes = [{
   "N publicaciones" y posts en cards con título `text-capitalize`. El post creado se resalta brevemente.
 - Drawer de nueva publicación estrecho (`min(100vw, 26rem)`) con fondo gris y el formulario dentro
   de una card blanca.
+- En cards que ocupan todo el alto, las partes fijas (p. ej. el `.card-body` del buscador) llevan
+  `flex-grow-0`: `.card-body` trae `flex: 1 1 auto` y empujaría el contenido al centro.
 - Respetar `prefers-reduced-motion` en animaciones.
 
 ## API y datos
@@ -338,6 +351,8 @@ qué se le pidió a la IA, qué se aceptó y qué se corrigió (y por qué).
 
 ## Fuera de alcance (ir a "qué haría con más tiempo")
 
-Actualizaciones optimistas con rollback, `MutationCache.onError` global, persistir los posts creados
-(p. ej. `localStorage`), E2E con Playwright, i18n, interruptor de modo oscuro, CI con GitHub Actions
-(si no da tiempo).
+Persistir los posts creados (p. ej. `localStorage`), actualizaciones optimistas con rollback, E2E con
+Playwright, CI con GitHub Actions y despliegue, modo demo con MSW en el navegador, i18n con
+**códigos de error genéricos traducibles** (en lugar de textos en `getErrorMessage` y en los esquemas
+Zod), `MutationCache.onError` global, cobertura en CI, interruptor de modo oscuro y, si la lista de
+usuarios creciera, paginarla en servidor o virtualizarla.
