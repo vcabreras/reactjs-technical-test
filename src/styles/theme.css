@@ -2,6 +2,14 @@
 :root {
 }
 
+/* SplitView: el panel de detalle acompaña el scroll en escritorio (≥ lg, 992px). */
+@media (min-width: 992px) {
+  .split-view__main {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
 /* DataTable */
 .data-table__row--clickable {
   cursor: pointer;
