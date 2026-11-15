@@ -9,6 +9,8 @@ export type { ErrorStateProps } from './ErrorState/ErrorState';
 export type { CharacterCount, FieldProps } from './FormField/FormField';
 export { Input } from './Input/Input';
 export type { InputProps } from './Input/Input';
+export { Pagination } from './Pagination/Pagination';
+export type { PaginationProps } from './Pagination/Pagination';
 export { SearchInput } from './SearchInput/SearchInput';
 export type { SearchInputProps } from './SearchInput/SearchInput';
 export { Skeleton, SkeletonGroup } from './Skeleton/Skeleton';
