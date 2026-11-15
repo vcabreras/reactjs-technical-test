@@ -10,6 +10,24 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              // Núcleo que necesita la carga inicial, en un chunk propio: cambia poco entre
+              // despliegues y el navegador lo reutiliza de caché. Solo estas librerías: un grupo
+              // genérico de node_modules arrastraría a la carga inicial las de la ruta diferida
+              // (p. ej. React Hook Form).
+              name: 'react-vendor',
+              test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler|@tanstack)[\\/]/,
+            },
+          ],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
