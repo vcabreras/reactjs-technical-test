@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { type RawUser, users } from './fixtures';
+import { posts, type RawPost, type RawUser, users } from './fixtures';
 
 export const API_URL = import.meta.env.VITE_API_URL;
 
@@ -41,5 +41,16 @@ export const handlers = [
   http.get(`${API_URL}/users/:id`, ({ params }) => {
     const user = users.find((u) => String(u.id) === params.id);
     return user ? HttpResponse.json(user) : HttpResponse.json({}, { status: 404 });
+  }),
+
+  http.get(`${API_URL}/posts`, ({ request }) => {
+    const userId = new URL(request.url).searchParams.get('userId');
+    return HttpResponse.json(posts.filter((p) => String(p.userId) === userId));
+  }),
+
+  http.post(`${API_URL}/posts`, async ({ request }) => {
+    const body = (await request.json()) as Omit<RawPost, 'id'>;
+    // Igual que JSONPlaceholder: siempre id 101.
+    return HttpResponse.json({ ...body, id: 101 }, { status: 201 });
   }),
 ];

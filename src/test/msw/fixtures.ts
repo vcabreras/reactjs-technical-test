@@ -11,6 +11,13 @@ export interface RawUser {
   company: { name: string; catchPhrase: string; bs: string };
 }
 
+export interface RawPost {
+  id: number;
+  userId: number;
+  title: string;
+  body: string;
+}
+
 function makeUser(
   id: number,
   name: string,
@@ -44,4 +51,10 @@ export const users: RawUser[] = [
     'South Christy',
   ),
   makeUser(7, 'Kurtis Weissnat', 'Elwyn.Skiles', 'Telly.Hoeger@billy.biz', 'Howemouth'),
+];
+
+export const posts: RawPost[] = [
+  { id: 1, userId: 1, title: 'Primer post de Leanne', body: 'Cuerpo 1' },
+  { id: 2, userId: 1, title: 'Segundo post de Leanne', body: 'Cuerpo 2' },
+  { id: 3, userId: 2, title: 'Post de Ervin', body: 'Cuerpo 3' },
 ];
