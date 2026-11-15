@@ -13,6 +13,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // URL ficticia: los tests nunca tocan la red real (MSW con onUnhandledFrame: 'error').
+    env: { VITE_API_URL: 'https://api.test' },
     css: false,
     restoreMocks: true,
     passWithNoTests: true,
